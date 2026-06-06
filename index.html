@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Una pregunta para ti ♥</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#fff7f1;
+    --blush:#ffe3e0;
+    --rose:#c84a64;
+    --rose-deep:#a3304a;
+    --rose-soft:#f4a8b6;
+    --ink:#43242b;
+    --gold:#d9a566;
+    --shadow:rgba(168,48,74,.18);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    font-family:'Manrope',sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(circle at 20% 20%, #ffe9e3 0%, transparent 45%),
+      radial-gradient(circle at 80% 30%, #ffdce6 0%, transparent 45%),
+      radial-gradient(circle at 50% 90%, #ffe7d8 0%, transparent 50%),
+      var(--cream);
+    min-height:100dvh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+    position:relative;
+    padding:24px;
+  }
+  /* grano sutil */
+  body::after{
+    content:"";position:fixed;inset:0;pointer-events:none;opacity:.04;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  /* corazones flotantes */
+  .hearts{position:fixed;inset:0;pointer-events:none;z-index:0;}
+  .hearts span{
+    position:absolute;bottom:-40px;color:var(--rose-soft);opacity:.5;
+    animation:rise linear infinite;
+  }
+  @keyframes rise{
+    0%{transform:translateY(0) rotate(0);opacity:0;}
+    10%{opacity:.6;}
+    100%{transform:translateY(-110vh) rotate(360deg);opacity:0;}
+  }
+
+  .stage{position:relative;z-index:2;width:100%;max-width:440px;}
+  .card{
+    background:rgba(255,255,255,.72);
+    backdrop-filter:blur(14px);
+    border:1px solid rgba(255,255,255,.8);
+    border-radius:32px;
+    padding:46px 34px;
+    box-shadow:0 30px 70px -20px var(--shadow), 0 4px 0 rgba(255,255,255,.6) inset;
+    text-align:center;
+  }
+  .screen{display:none;animation:fadeUp .7s cubic-bezier(.2,.8,.25,1) both;}
+  .screen.active{display:block;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:none;}}
+
+  .eyebrow{
+    font-family:'Manrope';font-size:.72rem;letter-spacing:.34em;text-transform:uppercase;
+    color:var(--rose);margin-bottom:18px;font-weight:600;opacity:.85;
+  }
+  h1{
+    font-family:'Fraunces',serif;font-weight:600;font-size:2.5rem;line-height:1.08;
+    color:var(--rose-deep);margin-bottom:10px;letter-spacing:-.01em;
+  }
+  h1 .accent{font-style:italic;color:var(--rose);}
+  .sub{font-size:1rem;color:#7a5560;line-height:1.5;margin-bottom:30px;}
+
+  /* botones de la pregunta */
+  .btn-row{display:flex;gap:16px;justify-content:center;align-items:center;flex-wrap:wrap;min-height:64px;}
+  .btn{
+    font-family:'Manrope';font-weight:600;font-size:1.05rem;cursor:pointer;border:none;
+    padding:15px 34px;border-radius:50px;transition:transform .25s, box-shadow .25s, background .25s;
+  }
+  .btn-yes{
+    background:linear-gradient(135deg,var(--rose),var(--rose-deep));color:#fff;
+    box-shadow:0 14px 26px -8px var(--shadow);
+  }
+  .btn-yes:hover{transform:translateY(-3px) scale(1.04);box-shadow:0 20px 34px -8px var(--shadow);}
+  .btn-no{
+    background:#fff;color:#9a7b82;border:1.5px solid #f0d4d9;position:relative;
+  }
+
+  /* calendario */
+  .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+  .cal-head button{
+    background:#fff;border:1.5px solid #f0d4d9;color:var(--rose);width:40px;height:40px;
+    border-radius:50%;font-size:1.1rem;cursor:pointer;transition:.2s;display:grid;place-items:center;
+  }
+  .cal-head button:hover:not(:disabled){background:var(--blush);transform:scale(1.08);}
+  .cal-head button:disabled{opacity:.3;cursor:not-allowed;}
+  .cal-month{font-family:'Fraunces',serif;font-size:1.3rem;color:var(--rose-deep);font-weight:600;text-transform:capitalize;}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
+  .cal-dow{font-size:.7rem;font-weight:600;color:#b89aa1;text-transform:uppercase;letter-spacing:.05em;padding:6px 0;}
+  .cal-day{
+    aspect-ratio:1;display:grid;place-items:center;border-radius:50%;font-size:.92rem;
+    cursor:pointer;transition:.18s;border:1.5px solid transparent;color:var(--ink);
+  }
+  .cal-day.empty{cursor:default;}
+  .cal-day.disabled{color:#d9c5c9;cursor:not-allowed;}
+  .cal-day.avail:hover{background:var(--blush);}
+  .cal-day.selected{background:linear-gradient(135deg,var(--rose),var(--rose-deep));color:#fff;transform:scale(1.05);box-shadow:0 8px 16px -6px var(--shadow);}
+  .cal-hint{font-size:.8rem;color:#a98b92;margin-top:16px;}
+
+  .next-btn{
+    margin-top:26px;width:100%;background:linear-gradient(135deg,var(--rose),var(--rose-deep));
+    color:#fff;border:none;padding:16px;border-radius:50px;font-family:'Manrope';font-weight:600;
+    font-size:1.05rem;cursor:pointer;transition:.25s;box-shadow:0 14px 26px -8px var(--shadow);
+  }
+  .next-btn:disabled{opacity:.45;cursor:not-allowed;box-shadow:none;}
+  .next-btn:not(:disabled):hover{transform:translateY(-3px);}
+
+  /* resumen / envío */
+  .date-pill{
+    display:inline-block;background:var(--blush);color:var(--rose-deep);font-weight:600;
+    padding:12px 24px;border-radius:50px;font-size:1.05rem;margin:8px 0 28px;
+  }
+  .done h1{font-size:2.2rem;}
+  .signature{font-family:'Fraunces',serif;font-style:italic;color:var(--rose);margin-top:18px;font-size:1.1rem;}
+  .big-heart{font-size:3rem;animation:beat 1.1s ease-in-out infinite;display:inline-block;}
+  @keyframes beat{0%,100%{transform:scale(1);}45%{transform:scale(1.18);}}
+</style>
+</head>
+<body>
+  <div class="hearts" id="hearts"></div>
+
+  <div class="stage">
+    <div class="card">
+
+      <!-- PANTALLA 1: la pregunta -->
+      <section class="screen active" id="s1">
+        <div class="eyebrow">tengo algo que preguntarte</div>
+        <h1>¿Quieres salir <span class="accent">conmigo?</span></h1>
+        <p class="sub">Prometo que será un buen día. Solo necesito un "sí" 🙈</p>
+        <div class="btn-row">
+          <button class="btn btn-yes" id="yesBtn">¡Sí! 💕</button>
+          <button class="btn btn-no" id="noBtn">No</button>
+        </div>
+      </section>
+
+      <!-- PANTALLA 2: calendario -->
+      <section class="screen" id="s2">
+        <div class="eyebrow">¡lo sabía! 🎉</div>
+        <h1>Elige el <span class="accent">día</span></h1>
+        <p class="sub">¿Cuándo te gustaría? Escoge una fecha de aquí a los próximos 3 meses.</p>
+        <div class="cal-head">
+          <button id="prevM" aria-label="Mes anterior">‹</button>
+          <div class="cal-month" id="calMonth"></div>
+          <button id="nextM" aria-label="Mes siguiente">›</button>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+        <p class="cal-hint" id="calHint">Toca un día disponible para elegirlo</p>
+        <button class="next-btn" id="toSend" disabled>Continuar →</button>
+      </section>
+
+      <!-- PANTALLA 3: envío -->
+      <section class="screen" id="s3">
+        <div class="eyebrow">casi listo</div>
+        <h1>Nuestra <span class="accent">cita</span></h1>
+        <p class="sub">Esto es lo que elegiste:</p>
+        <div class="date-pill" id="datePill">—</div>
+        <button class="next-btn" id="sendBtn">Enviar 💌</button>
+      </section>
+
+      <!-- PANTALLA 4: confirmación -->
+      <section class="screen done" id="s4">
+        <span class="big-heart">💖</span>
+        <h1>¡Es una <span class="accent">cita!</span></h1>
+        <p class="sub" id="finalText">Nos vemos pronto. No puedo esperar 🥰</p>
+        <div class="signature">— con cariño</div>
+      </section>
+
+    </div>
+  </div>
+
+<script>
+/* ---------- corazones de fondo ---------- */
+(function(){
+  const c=document.getElementById('hearts');
+  const glyphs=['♥','❥','❤','♡'];
+  for(let i=0;i<14;i++){
+    const s=document.createElement('span');
+    s.textContent=glyphs[Math.floor(Math.random()*glyphs.length)];
+    s.style.left=Math.random()*100+'%';
+    s.style.fontSize=(12+Math.random()*22)+'px';
+    s.style.animationDuration=(9+Math.random()*9)+'s';
+    s.style.animationDelay=(Math.random()*9)+'s';
+    c.appendChild(s);
+  }
+})();
+
+/* ---------- navegación entre pantallas ---------- */
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+/* ---------- el botón "No" que NO se deja ---------- */
+const noBtn=document.getElementById('noBtn');
+const yesBtn=document.getElementById('yesBtn');
+const dodgeMsgs=['No','¿Segura? 🥺','¡Espera!','No huyas 💔','Porfa 🙏','Inténtalo 😅','jeje no'];
+let escapes=0;
+function dodge(){
+  escapes++;
+  // el "No" salta a una posición aleatoria y se encoge
+  noBtn.style.position='fixed';
+  const pad=70;
+  const x=pad+Math.random()*(window.innerWidth-2*pad);
+  const y=pad+Math.random()*(window.innerHeight-2*pad);
+  noBtn.style.left=x+'px';
+  noBtn.style.top=y+'px';
+  noBtn.style.transform='scale('+Math.max(0.55,1-escapes*0.06)+')';
+  noBtn.textContent=dodgeMsgs[Math.min(escapes,dodgeMsgs.length-1)];
+  // el "Sí" crece para tentar más
+  yesBtn.style.transform='scale('+Math.min(1.6,1+escapes*0.08)+')';
+}
+noBtn.addEventListener('mouseover',dodge);
+noBtn.addEventListener('click',function(e){e.preventDefault();dodge();});
+noBtn.addEventListener('touchstart',function(e){e.preventDefault();dodge();},{passive:false});
+
+yesBtn.addEventListener('click',()=>{ buildCalendar(); show('s2'); });
+
+/* ---------- calendario (hoy → +3 meses) ---------- */
+const calGrid=document.getElementById('calGrid');
+const calMonth=document.getElementById('calMonth');
+const prevM=document.getElementById('prevM');
+const nextM=document.getElementById('nextM');
+const toSend=document.getElementById('toSend');
+const dow=['Do','Lu','Ma','Mi','Ju','Vi','Sá'];
+const monthNames=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+
+const today=new Date(); today.setHours(0,0,0,0);
+const maxDate=new Date(today); maxDate.setMonth(maxDate.getMonth()+3);
+let viewY=today.getFullYear(), viewM=today.getMonth();
+let selected=null;
+
+function sameDay(a,b){return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();}
+
+function buildCalendar(){
+  calGrid.innerHTML='';
+  calMonth.textContent=monthNames[viewM]+' '+viewY;
+  dow.forEach(d=>{const e=document.createElement('div');e.className='cal-dow';e.textContent=d;calGrid.appendChild(e);});
+
+  const first=new Date(viewY,viewM,1);
+  const startDow=first.getDay();
+  const daysInMonth=new Date(viewY,viewM+1,0).getDate();
+
+  for(let i=0;i<startDow;i++){const e=document.createElement('div');e.className='cal-day empty';calGrid.appendChild(e);}
+
+  for(let d=1;d<=daysInMonth;d++){
+    const cell=document.createElement('div');
+    cell.className='cal-day';
+    cell.textContent=d;
+    const date=new Date(viewY,viewM,d);
+    if(date<today||date>maxDate){
+      cell.classList.add('disabled');
+    }else{
+      cell.classList.add('avail');
+      if(selected&&sameDay(date,selected))cell.classList.add('selected');
+      cell.addEventListener('click',()=>{
+        selected=date;
+        buildCalendar();
+        toSend.disabled=false;
+      });
+    }
+    calGrid.appendChild(cell);
+  }
+
+  // limitar navegación
+  const firstViewable=(viewY===today.getFullYear()&&viewM===today.getMonth());
+  const lastViewable=(viewY===maxDate.getFullYear()&&viewM===maxDate.getMonth());
+  prevM.disabled=firstViewable;
+  nextM.disabled=lastViewable;
+}
+
+prevM.addEventListener('click',()=>{
+  viewM--; if(viewM<0){viewM=11;viewY--;} buildCalendar();
+});
+nextM.addEventListener('click',()=>{
+  viewM++; if(viewM>11){viewM=0;viewY++;} buildCalendar();
+});
+
+/* ---------- pantalla de envío ---------- */
+const datePill=document.getElementById('datePill');
+function prettyDate(d){
+  return d.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
+}
+toSend.addEventListener('click',()=>{
+  datePill.textContent=prettyDate(selected);
+  show('s3');
+});
+
+/* ---------- enviar ---------- */
+const sendBtn=document.getElementById('sendBtn');
+sendBtn.addEventListener('click',async ()=>{
+  sendBtn.disabled=true; sendBtn.textContent='Enviando...';
+
+  /* === OPCIONAL: recibir la respuesta por correo ===
+     1) Crea una cuenta gratis en https://formspree.io
+     2) Copia tu endpoint y pégalo abajo (descomenta el bloque)
+  */
+  /*
+  try{
+    await fetch('https://formspree.io/f/TU_ID_AQUI',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({mensaje:'¡Dijo que sí!', fecha:prettyDate(selected)})
+    });
+  }catch(e){}
+  */
+
+  document.getElementById('finalText').textContent='Nuestra cita es el '+prettyDate(selected)+'. No puedo esperar 🥰';
+  burst();
+  show('s4');
+});
+
+/* ---------- lluvia de corazones al confirmar ---------- */
+function burst(){
+  for(let i=0;i<30;i++){
+    const s=document.createElement('span');
+    s.textContent='💗';
+    s.style.position='fixed';
+    s.style.left=(40+Math.random()*20)+'%';
+    s.style.top='50%';
+    s.style.fontSize=(16+Math.random()*22)+'px';
+    s.style.zIndex=9999;
+    s.style.pointerEvents='none';
+    s.style.transition='transform 1.4s ease-out, opacity 1.4s ease-out';
+    document.body.appendChild(s);
+    requestAnimationFrame(()=>{
+      const ang=Math.random()*Math.PI*2, dist=120+Math.random()*260;
+      s.style.transform='translate('+Math.cos(ang)*dist+'px,'+(Math.sin(ang)*dist-100)+'px) rotate('+(Math.random()*360)+'deg)';
+      s.style.opacity='0';
+    });
+    setTimeout(()=>s.remove(),1500);
+  }
+}
+</script>
+</body>
+</html>
